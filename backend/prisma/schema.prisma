@@ -1,0 +1,99 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  CLIENT
+  RESTAURANT
+  DRIVER
+  ADMIN
+}
+
+model User {
+  id        String   @id @default(uuid()) // @id primary key, @default(uuid()) generates a new UUID for each user
+  email     String   @unique // @unique ensures no two users can have the same email address
+  password  String
+  name      String
+  phone     String? // ? indicates that the phone field is optional
+  role      Role
+  createdAt DateTime @default(now()) // @default(now()) sets the default value to the current timestamp when a new user is created
+  updatedAt DateTime @updatedAt
+
+  restaurant     Restaurant?
+  ordersAsClient Order[]     @relation("ClientOrders") // @relation defines a relationship between the User and Order models, where the ordersAsClient field references the clientId field in the Order model
+  ordersAsDriver Order[]     @relation("DriverOrders") // @relation defines a relationship between the User and Order models, where the ordersAsDriver field references the driverId field in the Order
+}
+
+model Restaurant {
+  id        String   @id @default(uuid())
+  owner     User     @relation(fields: [ownerId], references: [id]) // @relation defines a relationship between the Restaurant and User models, where the owner field references the id field in the User model
+  ownerId   String   @unique // @unique ensures that each restaurant has a unique owner
+  name      String
+  address   String
+  phone     String?
+  isOpen    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  menuItems MenuItem[]
+  orders    Order[]
+}
+
+model MenuItem {
+  id           String     @id @default(uuid())
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  restaurantId String
+  name         String
+  description  String?
+  price        Float
+  isAvailable  Boolean    @default(true)
+
+  orderItems OrderItem[]
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  PICKED_UP
+  DELIVERED
+  CANCELLED
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  client          User        @relation("ClientOrders", fields: [clientId], references: [id])
+  clientId        String
+  restaurant      Restaurant  @relation(fields: [restaurantId], references: [id])
+  restaurantId    String
+  driver          User?       @relation("DriverOrders", fields: [driverId], references: [id])
+  driverId        String?
+  status          OrderStatus @default(PENDING)
+  totalPrice      Float
+  deliveryAddress String
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  items OrderItem[]
+}
+
+model OrderItem {
+  id         String   @id @default(uuid())
+  order      Order    @relation(fields: [orderId], references: [id])
+  orderId    String
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+  menuItemId String
+  quantity   Int
+  unitPrice  Float
+}
