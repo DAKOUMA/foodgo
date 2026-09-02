@@ -32,6 +32,8 @@ model User {
   restaurant     Restaurant?
   ordersAsClient Order[]     @relation("ClientOrders") // @relation defines a relationship between the User and Order models, where the ordersAsClient field references the clientId field in the Order model
   ordersAsDriver Order[]     @relation("DriverOrders") // @relation defines a relationship between the User and Order models, where the ordersAsDriver field references the driverId field in the Order
+
+  isActive Boolean @default(true)
 }
 
 model Restaurant {

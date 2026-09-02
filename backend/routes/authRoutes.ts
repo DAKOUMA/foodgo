@@ -2,10 +2,12 @@ import { Router } from "express";
 import bcrypt from "bcrypt"
 import { prisma } from "../lib/prisma";
 import jwt from "jsonwebtoken";
+import { validate } from "../middleware/validate";
+import { registerSchema, loginSchema } from "../validators/authValidators";
 
 const router = Router()
 
-router.post("/register", async (req, res) => {
+router.post("/register", validate(registerSchema), async (req, res) => {
     try {
         const { email, password, name, phone, role } = req.body;
 
@@ -27,7 +29,7 @@ router.post("/register", async (req, res) => {
     }
 })
 
-router.post("/login", async (req, res) => {
+router.post("/login",validate(loginSchema), async (req, res) => {
     try {
         const { email, password } = req.body;
 
@@ -41,8 +43,12 @@ router.post("/login", async (req, res) => {
             return res.status(401).json({ error: "Incorect email or password" })
         }
 
+        if (!user.isActive) {
+            return res.status(403).json({ error: "Account deactivate" })
+        }
+
         const token = jwt.sign(
-            { userID: user.id, role: user.role },
+            { userId: user.id, role: user.role },
             process.env.JWT_SECRET as string,
             { expiresIn: "7d" }
         )

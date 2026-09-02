@@ -1,5 +1,8 @@
 import { Router } from "express";
 import { prisma } from "../lib/prisma";
+import { AuthRequest, requireAuth, requireRole } from "../middleware/authMiddleware";
+import { validate } from "../middleware/validate";
+import { createRestaurantSchema, updateRestaurantSchema } from "../validators/restaurantsValidators";
 
 const router = Router();
 
@@ -34,10 +37,11 @@ router.get("/:id", async (req, res) => {
     }
 })
 
-router.post("/", async (req, res) => {
+router.post("/", requireAuth, requireRole("RESTAURANT"), validate(createRestaurantSchema),  async (req: AuthRequest, res) => {
     try {
-        const { ownerId, name, address, phone } = req.body;
-        
+        const { name, address, phone } = req.body;
+        const ownerId = req.userId as string
+
         const newRestaurant = await prisma.restaurant.create({
             data: {
                 ownerId,
@@ -52,9 +56,17 @@ router.post("/", async (req, res) => {
     }
 })
 
-router.patch("/:id", async (req, res) => {
+router.patch("/:id", requireAuth, validate(updateRestaurantSchema), async (req: AuthRequest, res) => {
     try {
-        const restaurantId = req.params.id;
+        const restaurantId = req.params.id as string;
+        const restaurant = await prisma.restaurant.findUnique({ where: { id: restaurantId } })
+        if (!restaurant) {
+            return res.status(404).json({ error: "Restaurant not found" })
+        }
+        if (restaurant.ownerId !== req.userId) {
+            return res.status(403).json({ error: "Your are not the owner" })
+        }
+
         const { name, address, phone, isOpen } = req.body;
 
         const updatedRestaurant = await prisma.restaurant.update({
