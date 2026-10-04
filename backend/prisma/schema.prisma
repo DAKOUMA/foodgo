@@ -32,7 +32,7 @@ model User {
   password  String
   name      String
   phone     String? // ? indicates that the phone field is optional
-  address   String
+  address   String?
   paymentMethod PaymentMethod?
   role      Role
   createdAt DateTime @default(now()) // @default(now()) sets the default value to the current timestamp when a new user is created
