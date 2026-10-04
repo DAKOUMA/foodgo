@@ -43,7 +43,7 @@ router.get("/orders", async (req, res) => {
         });
         res.json(orders);
     } catch (error) {
-        res.status(500).json({ error: "Faulde to fetch orders" })
+        res.status(500).json({ error: "Failed to fetch orders" })
     }
 });
 
@@ -52,7 +52,7 @@ router.patch("/users/:id/deactivate", async (req, res) => {
         const user = await prisma.user.update({
             where: { id: req.params.id },
             data: { isActivate: false },
-            select: { id: true, email: true, isActivate: true }
+            select: { id: true, email: true, isActive: true }
         });
         res.json(user);
     } catch (error) {

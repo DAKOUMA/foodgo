@@ -12,6 +12,13 @@ datasource db {
   provider = "postgresql"
 }
 
+enum PaymentMethod {
+  CASH
+  MVOLA
+  ORANGE_MONEY
+  AIRTEL_MONEY
+}
+
 enum Role {
   CLIENT
   RESTAURANT
@@ -25,6 +32,8 @@ model User {
   password  String
   name      String
   phone     String? // ? indicates that the phone field is optional
+  address   String
+  paymentMethod PaymentMethod?
   role      Role
   createdAt DateTime @default(now()) // @default(now()) sets the default value to the current timestamp when a new user is created
   updatedAt DateTime @updatedAt
@@ -57,7 +66,8 @@ model MenuItem {
   restaurantId String
   name         String
   description  String?
-  price        Float
+  price        Int
+  imageUrl     String?
   isAvailable  Boolean    @default(true)
 
   orderItems OrderItem[]
@@ -82,8 +92,10 @@ model Order {
   driver          User?       @relation("DriverOrders", fields: [driverId], references: [id])
   driverId        String?
   status          OrderStatus @default(PENDING)
-  totalPrice      Float
+  totalPrice      Int
+  pickupAddress   String
   deliveryAddress String
+  paymentMethod   PaymentMethod
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
@@ -97,5 +109,5 @@ model OrderItem {
   menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
   menuItemId String
   quantity   Int
-  unitPrice  Float
+  unitPrice  Int
 }

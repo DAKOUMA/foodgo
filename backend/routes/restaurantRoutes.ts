@@ -13,7 +13,7 @@ router.get("/", async (req, res) => {
             include: { menuItems: true } // Include the menu items for each restaurant
         })
         if (restaurants.length === 0) {
-            return res.status(404).json({ message: "No open restaurants found" });
+            return res.status(200).json({ message: "No open restaurants found" });
         }
         res.json(restaurants);
     } catch (error) {

@@ -2,6 +2,8 @@ import { Router } from "express";
 import { prisma } from "../lib/prisma";
 import { requireAuth, AuthRequest, requireRole } from "../middleware/authMiddleware";
 import { OrderStatus } from "../generated/prisma/enums";
+import { validate } from "../middleware/validate";
+import { createOrderSchema } from "../validators/orderValidators";
 const router = Router();
 
 const RESTAURANT_ALLOWED_TRANSITIONS: { [key: string]: string[] } = {
@@ -24,7 +26,7 @@ const DRIVER_ALLOWED_TRANSITIONS: { [key: string]: string[] } = {
     "CANCELLED": []
 }
 
-router.post("/", requireAuth, requireRole("CLIENT"), async (req: AuthRequest, res) => {
+router.post("/", requireAuth, requireRole("CLIENT"), validate(createOrderSchema) , async (req: AuthRequest, res) => {
     try {
         const clientId = req.userId
         if (!clientId) {
@@ -111,7 +113,7 @@ router.get("/", requireAuth, async (req: AuthRequest, res) => {
         })
     
         if (orders.length === 0) {
-            return res.status(404).json({ message: "No orders found" })
+            return res.status(200).json({ message: "No orders found" })
         }
 
         res.json(orders);
@@ -131,7 +133,7 @@ router.get("/available", requireAuth, requireRole("DRIVER"), async (req: AuthReq
         })
 
         if (orders.length === 0) {
-            return res.status(404).json({ message: "No available orders found" });
+            return res.status(200).json({ message: "No available orders found" });
         }
         res.json(orders);
     } catch (error) {
