@@ -32,44 +32,54 @@ router.post("/", requireAuth, requireRole("CLIENT"), validate(createOrderSchema)
         if (!clientId) {
             return res.status(401).json({ error: "no userId in req.userId" });
         }
-        const { restaurantId, deliveryAddress, items } = req.body;
+        const { restaurantId, deliveryAddress, paymentMethod, items } = req.body;
 
-        const menuItemsIds = items.map((item: { menuItemId: string; quantity: number }) => item.menuItemId);
+        // 1. Le restaurant existe et est ouvert ?
+        const restaurant = await prisma.restaurant.findUnique({ where: { id: restaurantId } });
+        if (!restaurant) {
+            return res.status(404).json({ error: "Restaurant not found" });
+        }
+        if (!restaurant.isOpen) {
+            return res.status(400).json({ error: "Restaurant is closed" });
+        }
+
+        // 2. Les plats appartiennent à CE restaurant et sont disponibles ?
+        const menuItemsIds: string[] = items.map((item: { menuItemId: string }) => item.menuItemId);
         const menuItems = await prisma.menuItem.findMany({
-            where: { id: { in: menuItemsIds } }
+            where: { id: { in: menuItemsIds }, restaurantId, isAvailable: true }
         });
 
-        if (menuItems.length !== items.length) {
+        // Set retire les doublons : on compare au nombre de plats DISTINCTS demandés
+        if (menuItems.length !== new Set(menuItemsIds).size) {
             return res.status(400).json({ error: "Some menu items are not available" });
         }
 
+        // 3. Le total est calculé côté serveur, à partir des prix en base
         let totalPrice = 0;
         const orderItemsData = items.map((item: { menuItemId: string; quantity: number }) => {
-            const menuItem = menuItems.find(mi => mi.id === item.menuItemId);
-
-            if (!menuItem) {
-                throw new Error("Menu item not found");
-            } else {
-                totalPrice += menuItem.price * item.quantity;
-                return {
-                    menuItemId: item.menuItemId,
-                    quantity: item.quantity,
-                    unitPrice: menuItem.price
-                }
-            }
+            const menuItem = menuItems.find(mi => mi.id === item.menuItemId)!;
+            totalPrice += menuItem.price * item.quantity;
+            return {
+                menuItemId: item.menuItemId,
+                quantity: item.quantity,
+                unitPrice: menuItem.price
+            };
         });
 
+        // 4. Création : pickupAddress vient du restaurant, pas du client
         const newOrder = await prisma.order.create({
             data: {
                 clientId,
                 restaurantId,
                 deliveryAddress,
+                pickupAddress: restaurant.address,
+                paymentMethod,
                 totalPrice,
                 items: { create: orderItemsData },
             },
             include: { items: { include: { menuItem: true } } }
         })
-        res.json(newOrder);
+        res.status(201).json(newOrder);
     } catch (error) {
         res.status(500).json({ error: "Failed to create order" });
     }

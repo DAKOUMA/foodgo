@@ -8,5 +8,6 @@ const item = z.object({
 export const createOrderSchema = z.object({
     restaurantId: z.uuid(),
     deliveryAddress: z.string().min(1, "must be at least 1 character long"),
+    paymentMethod: z.enum(["CASH", "MVOLA", "ORANGE_MONEY", "AIRTEL_MONEY"]),
     items: z.array(item).min(1, "must have at least 1 item")
 })

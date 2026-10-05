@@ -14,7 +14,7 @@ router.get("/users", async (req, res) => {
         });
         res.json(users)
     } catch (error) {
-        res.status(500).json({ error: "failed to fecth users" })
+        res.status(500).json({ error: "failed to fetch users" })
     }
 })
 
@@ -26,7 +26,7 @@ router.get("/restaurants", async (req, res) => {
         })
         res.json(restaurants)
     } catch (error) {
-        res.status(500).json({ error: "Failde to fetch restaurants" });
+        res.status(500).json({ error: "Failed to fetch restaurants" });
     }
 });
 

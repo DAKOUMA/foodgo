@@ -86,14 +86,14 @@ enum OrderStatus {
 model Order {
   id              String      @id @default(uuid())
   client          User        @relation("ClientOrders", fields: [clientId], references: [id])
-  clientId        String
+  clientId        String      
   restaurant      Restaurant  @relation(fields: [restaurantId], references: [id])
   restaurantId    String
   driver          User?       @relation("DriverOrders", fields: [driverId], references: [id])
   driverId        String?
   status          OrderStatus @default(PENDING)
   totalPrice      Int
-  pickupAddress   String
+  pickupAddress   String      
   deliveryAddress String
   paymentMethod   PaymentMethod
   createdAt       DateTime    @default(now())

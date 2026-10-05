@@ -1,48 +1,69 @@
 import { Router } from "express";
+import bcrypt from "bcrypt";
 import { prisma } from "../lib/prisma";
-import { requireAuth, AuthRequest, requireRole } from "../middleware/authMiddleware";
-import { OrderStatus } from "../generated/prisma/enums";
-import bcrypt from "bcrypt"
+import { Prisma } from "../generated/prisma/client";
+import { requireAuth, AuthRequest } from "../middleware/authMiddleware";
 import { validate } from "../middleware/validate";
 import { updateUserSchema } from "../validators/usersValidators";
+
 const router = Router();
 
-router.get("/me", requireAuth, requireRole("CLIENT"), async (req: AuthRequest, res) => {
-    try {
-        const clientId = req.userId
-        if (!clientId) {
-            return res.status(401).json({ error: "no userId in req.userId" });
-        }
-        const orders = await prisma.order.findMany({
-            where: { clientId },
-            include: {
-                restaurant: { select: { name: true } },
-                items: { include: { menuItem: true } },
-                driver: { select: { id: true, name: true } }
-            },
-            orderBy: { createdAt: "desc" }
-        })
-        res.json(orders);
-    } catch (error) { 
-        res.status(500).json({ error: "Failed to fetch user information" });
-     }
-})
+// Les champs qu'on a le droit de renvoyer. Jamais le password.
+const publicUserSelect = {
+    id: true,
+    email: true,
+    name: true,
+    phone: true,
+    address: true,
+    paymentMethod: true,
+    role: true,
+} satisfies Prisma.UserSelect;
 
-router.patch("/me", requireAuth, requireRole("CLIENT"), validate(updateUserSchema), async (req: AuthRequest, res) => {
+// Tous les rôles ont un profil, donc requireAuth seul (pas de requireRole)
+router.get("/me", requireAuth, async (req: AuthRequest, res) => {
     try {
-        const clientId = req.userId
-        if (!clientId) {
-            return res.status(401).json({ error: "no userId in req.userId" });
+        const user = await prisma.user.findUnique({
+            where: { id: req.userId },
+            select: publicUserSelect,
+        });
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
         }
-        const { name, email, phone, paymentMethod, password } = req.body
-        const hashedPassword = await bcrypt.hash(password, 10);
+        res.json(user);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch user information" });
+    }
+});
+
+router.patch("/me", requireAuth, validate(updateUserSchema), async (req: AuthRequest, res) => {
+    try {
+        const userId = req.userId as string;
+        const { name, phone, address, paymentMethod, currentPassword, newPassword } = req.body;
+
+        // Prisma ignore les champs valant undefined : seuls les champs envoyés sont modifiés
+        const data: Prisma.UserUpdateInput = { name, phone, address, paymentMethod };
+
+        if (newPassword) {
+            const user = await prisma.user.findUnique({ where: { id: userId } });
+            if (!user) {
+                return res.status(404).json({ error: "User not found" });
+            }
+            const valid = await bcrypt.compare(currentPassword, user.password);
+            if (!valid) {
+                return res.status(403).json({ error: "Current password is incorrect" });
+            }
+            data.password = await bcrypt.hash(newPassword, 10);
+        }
+
         const updatedUser = await prisma.user.update({
-            where: { id: clientId },
-            data: { name, email, phone, paymentMethod, password: hashedPassword },
-            select: { id: true, email: true, name: true, phone: true, paymentMethod: true } // never send critical data
-        })
+            where: { id: userId },
+            data,
+            select: publicUserSelect,
+        });
         res.json(updatedUser);
     } catch (error) {
         res.status(500).json({ error: "Failed to update user information" });
     }
-})
+});
+
+export default router;

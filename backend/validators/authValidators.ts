@@ -6,7 +6,7 @@ export const registerSchema = z.object({
     name: z.string().min(4, "name require"),
     phone: z.string().optional(),
     role: z.enum(["CLIENT", "RESTAURANT", "DRIVER"]),
-    address: z.string().optional()
+    address: z.string().min(5, "Address required")
 })
 
 export const loginSchema = z.object({

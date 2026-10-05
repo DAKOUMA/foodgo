@@ -9,7 +9,7 @@ const router = Router()
 
 router.post("/register", validate(registerSchema), async (req, res) => {
     try {
-        const { email, password, name, phone, role } = req.body;
+        const { email, password, name, phone, role, address } = req.body;
 
         const existing = await prisma.user.findUnique({ where: { email } });
         if (existing) {
@@ -19,7 +19,7 @@ router.post("/register", validate(registerSchema), async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const user = await prisma.user.create({
-            data: { email, password: hashedPassword, name, phone, role },
+            data: { email, password: hashedPassword, name, phone, role, address },
             select: { id: true, email: true, name: true, role: true } // never send critical data
         });
 

@@ -4,7 +4,8 @@ import restaurantRoutes from "./routes/restaurantRoutes";
 import menuItemRoutes from "./routes/menuItemRoutes";
 import orderRoutes from "./routes/orderRoutes";
 import authRoutes from "./routes/authRoutes";
-import adminRoutes from "./routes/adminRoutes"
+import adminRoutes from "./routes/adminRoutes";
+import usersRoutes from "./routes/usersRoutes";
 
 const app = express();
 app.use(cors());
@@ -17,8 +18,9 @@ app.get("/", (req, res) => {
 app.use("/restaurants", restaurantRoutes);
 app.use("/menu-items", menuItemRoutes);
 app.use("/orders", orderRoutes);
-app.use("/auth", authRoutes)
-app.use("/admin", adminRoutes)
+app.use("/auth", authRoutes);
+app.use("/admin", adminRoutes);
+app.use("/users", usersRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

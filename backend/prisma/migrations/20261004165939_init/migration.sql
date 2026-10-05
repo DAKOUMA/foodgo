@@ -1,4 +1,7 @@
 -- CreateEnum
+CREATE TYPE "PaymentMethod" AS ENUM ('CASH', 'MVOLA', 'ORANGE_MONEY', 'AIRTEL_MONEY');
+
+-- CreateEnum
 CREATE TYPE "Role" AS ENUM ('CLIENT', 'RESTAURANT', 'DRIVER', 'ADMIN');
 
 -- CreateEnum
@@ -11,9 +14,12 @@ CREATE TABLE "User" (
     "password" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "phone" TEXT,
+    "address" TEXT,
+    "paymentMethod" "PaymentMethod",
     "role" "Role" NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
@@ -25,6 +31,7 @@ CREATE TABLE "Restaurant" (
     "name" TEXT NOT NULL,
     "address" TEXT NOT NULL,
     "phone" TEXT,
+    "isOpen" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -37,7 +44,8 @@ CREATE TABLE "MenuItem" (
     "restaurantId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
-    "price" DOUBLE PRECISION NOT NULL,
+    "price" INTEGER NOT NULL,
+    "imageUrl" TEXT,
     "isAvailable" BOOLEAN NOT NULL DEFAULT true,
 
     CONSTRAINT "MenuItem_pkey" PRIMARY KEY ("id")
@@ -50,8 +58,10 @@ CREATE TABLE "Order" (
     "restaurantId" TEXT NOT NULL,
     "driverId" TEXT,
     "status" "OrderStatus" NOT NULL DEFAULT 'PENDING',
-    "totalPrice" DOUBLE PRECISION NOT NULL,
+    "totalPrice" INTEGER NOT NULL,
+    "pickupAddress" TEXT NOT NULL,
     "deliveryAddress" TEXT NOT NULL,
+    "paymentMethod" "PaymentMethod" NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -64,7 +74,7 @@ CREATE TABLE "OrderItem" (
     "orderId" TEXT NOT NULL,
     "menuItemId" TEXT NOT NULL,
     "quantity" INTEGER NOT NULL,
-    "unitPrice" DOUBLE PRECISION NOT NULL,
+    "unitPrice" INTEGER NOT NULL,
 
     CONSTRAINT "OrderItem_pkey" PRIMARY KEY ("id")
 );
