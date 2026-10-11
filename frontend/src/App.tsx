@@ -1,14 +1,23 @@
-import './App.css'
+import { Navigate, Route, Routes } from "react-router-dom";
+import { ProtectedRoute } from "./routes/ProtectedRoute";
+import LoginPage from "./pages/LoginPage";
+import UserPage from "./pages/UserPage";
+import ToastContainer from "./components/ui/ToastContainer";
 
-function App() {
-
+export default function App() {
   return (
     <>
-      <div>
-        VITE APP + Tailwindcss
-      </div>
-    </>
-  )
-}
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/login" element={<LoginPage />} />
 
-export default App
+        <Route element={<ProtectedRoute allowedRoles={["CLIENT"]} />}>
+          <Route path="/user" element={<UserPage />} />
+        </Route>
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+      <ToastContainer />
+    </>
+  );
+}

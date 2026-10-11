@@ -51,12 +51,12 @@ router.patch("/users/:id/deactivate", async (req, res) => {
     try {
         const user = await prisma.user.update({
             where: { id: req.params.id },
-            data: { isActivate: false },
+            data: { isActive: false },
             select: { id: true, email: true, isActive: true }
         });
         res.json(user);
     } catch (error) {
-        res.status(500).json({ error: "Failed to deactive user" })
+        res.status(500).json({ error: "Failed to deactivate user" })
     }
 })
 
