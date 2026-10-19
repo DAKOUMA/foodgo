@@ -3,7 +3,7 @@ import bcrypt from "bcrypt"
 import { prisma } from "../lib/prisma";
 import jwt from "jsonwebtoken";
 import { validate } from "../middleware/validate";
-import { registerSchema, loginSchema } from "../validators/authValidators";
+import { registerSchema, loginSchema } from "../../shared/schemas/auth.schemas";
 
 const router = Router()
 

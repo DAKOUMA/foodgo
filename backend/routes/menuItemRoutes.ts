@@ -2,7 +2,7 @@ import { Router } from "express";
 import { prisma } from "../lib/prisma";
 import { AuthRequest, requireAuth, requireRole } from "../middleware/authMiddleware";
 import { validate } from "../middleware/validate";
-import { createMenuItemSchema, updateMenuItemSchema } from "../validators/menuItemValidators";
+import { createMenuItemSchema, updateMenuItemSchema } from "../../shared/schemas/menuItem.schemas";
 const router = Router();
 
 router.get("/", async (req, res) => {
@@ -24,14 +24,20 @@ router.post("/", requireAuth, requireRole("RESTAURANT"), validate(createMenuItem
     try {
         const { restaurantId, name, description, price } = req.body;
 
-        const restaurant = await prisma.restaurant.findUnique({ where: { id: restaurantId } });
+        const restaurant = await prisma.restaurant.findUnique({ where: { id: restaurantId } }); 
+        const menuItemFind = await prisma.menuItem.findFirst({ where: { name: name } }) // find another menuItem with the same name
         if (!restaurant) {
             return res.status(404).json({ error: "Restaurant not found" })
         }
+        // Check if the person creating the menu item is the owner
         if (restaurant.ownerId !== req.userId) {
             return res.status(403).json({ error: "You are note the owner of this restaurant" })
         }
-
+        // Check the name and return an error of same name of menuItem
+        if (menuItemFind?.name === name) {
+            return res.status(403).json({ error: "Another items with this name already exist" })
+        }
+        // Create the menuItem with all the data
         const menuItem = await prisma.menuItem.create({
             data: { restaurantId, name, description, price }
         })
@@ -83,7 +89,7 @@ router.delete("/:id", requireAuth, async (req: AuthRequest, res) => {
         }
 
         await prisma.menuItem.delete({ where: { id: menuItemId } })
-        res.status(204).send();
+        res.status(204).send({ message: "Item deleted" });
     } catch (error) {
         res.status(500).json({ error: "Failed to delete menu item" });
     }

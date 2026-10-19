@@ -2,7 +2,7 @@ import { Router } from "express";
 import { prisma } from "../lib/prisma";
 import { AuthRequest, requireAuth, requireRole } from "../middleware/authMiddleware";
 import { validate } from "../middleware/validate";
-import { createRestaurantSchema, updateRestaurantSchema } from "../validators/restaurantsValidators";
+import { createRestaurantSchema, updateRestaurantSchema } from "../../shared/schemas/restaurants.schemas";
 
 const router = Router();
 

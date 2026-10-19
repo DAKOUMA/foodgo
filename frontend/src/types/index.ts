@@ -1,3 +1,6 @@
+import { z } from "zod"
+import { registerSchema } from "../../../shared/schemas/auth.schemas"
+
 export type Role = "CLIENT" | "RESTAURANT" | "DRIVER" | "ADMIN";
 
 export type PaymentMethod = "CASH" | "MVOLA" | "ORANGE_MONEY" | "AIRTEL_MONEY";
@@ -15,6 +18,8 @@ export interface User {
     paymentMethod?: PaymentMethod;
     createdAt: Date;
 }
+
+export type UserType = z.infer<typeof registerSchema>
 
 export interface AuthResponse {
     user: User;

@@ -1,9 +1,8 @@
 import { Router } from "express";
 import { prisma } from "../lib/prisma";
 import { requireAuth, AuthRequest, requireRole } from "../middleware/authMiddleware";
-import { OrderStatus } from "../generated/prisma/enums";
 import { validate } from "../middleware/validate";
-import { createOrderSchema } from "../validators/orderValidators";
+import { createOrderSchema } from "../../shared/schemas/order.schemas";
 const router = Router();
 
 const RESTAURANT_ALLOWED_TRANSITIONS: { [key: string]: string[] } = {
