@@ -1,11 +1,11 @@
 import express  from "express";
 import cors from "cors";
-import restaurantRoutes from "./routes/restaurantRoutes";
-import menuItemRoutes from "./routes/menuItemRoutes";
-import orderRoutes from "./routes/orderRoutes";
+import restaurantRoutes from "./routes/restaurant/restaurant.routes";
+
 import authRoutes from "./routes/authRoutes";
-import adminRoutes from "./routes/adminRoutes";
-import usersRoutes from "./routes/usersRoutes";
+import adminRoutes from "./routes/admin/admin.routes";
+import usersRoutes from "./routes/user/users.routes";
+import driverRoutes from "./routes/driver/driver.routes";
 
 const app = express();
 app.use(cors());
@@ -16,11 +16,10 @@ app.get("/", (req, res) => {
 });
 
 app.use("/restaurants", restaurantRoutes);
-app.use("/menu-items", menuItemRoutes);
-app.use("/orders", orderRoutes);
 app.use("/auth", authRoutes);
 app.use("/admin", adminRoutes);
 app.use("/users", usersRoutes);
+app.use("/driver", driverRoutes)
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

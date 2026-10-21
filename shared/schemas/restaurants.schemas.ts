@@ -7,6 +7,4 @@ export const createRestaurantSchema = z.object({
     isOpen: z.boolean().optional()
 })
 
-export const updateRestaurantSchema = createRestaurantSchema.partial().extend({
-    isOpen: z.boolean().optional()
-})
+export const updateRestaurantSchema = createRestaurantSchema.partial()
