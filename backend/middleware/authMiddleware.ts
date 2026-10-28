@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { Role } from "../generated/prisma/enums";
+import { prisma } from "../lib/prisma";
 
 export interface AuthRequest extends Request {
   userId?: string;
@@ -8,7 +9,7 @@ export interface AuthRequest extends Request {
 }
 
 export function requireAuth(...roles: Role[]) {
-  return (req: AuthRequest, res: Response, next: NextFunction) => {
+  return async (req: AuthRequest, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
 
     // 1. Vérif présence du token
@@ -19,16 +20,24 @@ export function requireAuth(...roles: Role[]) {
     const token = authHeader.split(" ")[1];
 
     // 2. Vérif validité du token
+    let payload: {userId: string; role: Role}
     try {
-      const payload = jwt.verify(token, process.env.JWT_SECRET as string) as {
-        userId: string;
-        role: Role;
-      };
-      req.userId = payload.userId;
-      req.userRole = payload.role;
+      payload = jwt.verify(token, process.env.JWT_SECRET as string) as typeof payload;
     } catch (error) {
       return res.status(401).json({ error: "Invalid token" });
     }
+
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId},
+      select: { id: true, role: true, isActive: true}
+    })
+
+    if (!user || !user.isActive) {
+      return res.status(401).json({ error: "Account not found or deactivated" });
+    }
+
+    req.userId = user.id;
+    req.userRole = user.role;
 
     // 3. Vérif rôle (uniquement si des rôles sont demandés)
     if (roles.length > 0 && (!req.userRole || !roles.includes(req.userRole))) {

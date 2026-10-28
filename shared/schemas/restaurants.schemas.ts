@@ -1,4 +1,4 @@
-import { boolean, z } from "zod";
+import { z } from "zod";
 
 export const createRestaurantSchema = z.object({
     name: z.string().min(4, "name required"),

@@ -79,9 +79,9 @@ export const orderController = {
                 },
                 include: { items: { include: { menuItem: true } } }
             })
-            res.status(201).json(newOrder);
+            return res.status(201).json(newOrder);
         } catch (error) {
-            res.status(500).json({ error: "Failed to create order" });
+            return res.status(500).json({ error: "Failed to create order" });
         }
     },
 
@@ -128,7 +128,7 @@ export const orderController = {
 
             res.json(orders);
         } catch (error) {
-            res.status(500).json({ error: "Failed to fetch orders" });
+            return res.status(500).json({ error: "Failed to fetch orders" });
         }
     },
 
@@ -141,46 +141,61 @@ export const orderController = {
                     restaurant: true
                 }
             })
-    
+
             if (orders.length === 0) {
                 return res.status(200).json({ message: "No available orders found" });
             }
             res.json(orders);
         } catch (error) {
-            res.status(500).json({ error: "Failed to fetch available orders" });
+            return res.status(500).json({ error: "Failed to fetch available orders" });
         }
     },
 
     assignDriver: async (req: AuthRequest, res: Response) => {
         try {
-            const orderId = req.params.id as string
-            const { status: newStatus } = req.body
+            const orderId = req.params.id as string;
+            const driverId = req.userId as string;
+            const driver = await prisma.user.findUnique({ where: { id: driverId } });
+            const { status: newStatus } = req.body;
 
-            const order = await prisma.order.findUnique({ where: { id: orderId } })
+            const order = await prisma.order.findUnique({ where: { id: orderId } });
             if (!order) return res.status(404).json({ error: "Order not found" });
-    
-            // const driverTransitions: OrderStatus[] = ["PICKED_UP", "DELIVERED"]
-            const allowed = DRIVER_ALLOWED_TRANSITIONS[order.status];
-    
-    
-    
+
+            if (!driver?.isActiveAsDriver) {
+                return res.status(403).json({ error: "You must be active as driver to take orders" });
+            }
+
+            // La commande appartient déjà à un autre livreur
+            if (order.driverId && order.driverId !== driverId) {
+                return res.status(409).json({ error: "Order already assigned to another driver" });
+            }
+
+            // Prendre une commande libre : elle doit être READY et le livreur actif
             if (!order.driverId) {
                 if (order.status !== "READY") {
                     return res.status(400).json({ error: "Order is not ready for pickup" });
                 }
-            } else if (order.driverId !== req.userId) {
-                return res.status(409).json({ error: "Order already assigned to another driver" });
             }
-    
-            if (!allowed || !allowed.includes(newStatus)) {
+
+            const allowed = DRIVER_ALLOWED_TRANSITIONS[order.status];
+            if (!allowed.includes(newStatus)) {
                 return res.status(400).json({ error: `Invalid status transition from ${order.status} to ${newStatus}` });
             }
-    
-    
-            const updatedOrder = await prisma.order.update({
+
+            // ⭐ Écriture conditionnelle : ne marche que si rien n'a changé depuis la lecture
+            const result = await prisma.order.updateMany({
+                where: { id: orderId, status: order.status, driverId: order.driverId },
+                data: { driverId, status: newStatus },
+            });
+
+            if (result.count === 0) {
+                return res.status(409).json({ error: "Order was just taken or updated by someone else" });
+            }
+
+            const updatedOrder = await prisma.order.findUnique({
                 where: { id: orderId },
-                data: { driverId: req.userId, status: newStatus }
-            })
+                include: { items: { include: { menuItem: true } }, restaurant: true },
+            });
             res.json(updatedOrder);
         } catch (error) {
             return res.status(500).json({ error: "Failed to update order status" });
@@ -191,30 +206,30 @@ export const orderController = {
         try {
             const orderId = req.params.id as string;
             const { status: newStatus } = req.body;
-    
+
             const order = await prisma.order.findUnique({
                 where: { id: orderId },
                 include: { restaurant: true }
             })
-    
+
             if (!order) return res.status(404).json({ error: "Order not found" });
-    
+
             const allowed = RESTAURANT_ALLOWED_TRANSITIONS[order.status];
-    
+
             if (!allowed.includes(newStatus)) {
                 return res.status(400).json({ error: `Invalid status transition from ${order.status} to ${newStatus}` });
             }
-    
+
             if (req.userRole !== "RESTAURANT" || order.restaurant.ownerId !== req.userId) {
                 return res.status(403).json({ error: "Not authorized for this transitions" })
             }
-    
+
             const updatedOrder = await prisma.order.update({
                 where: { id: orderId },
                 data: { status: newStatus }
             });
             res.json(updatedOrder);
-    
+
         } catch (error) {
             return res.status(500).json({ error: "Failed to update order status" });
         }

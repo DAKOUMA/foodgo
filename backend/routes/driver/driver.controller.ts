@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 import { AuthRequest } from "../../middleware/authMiddleware";
 import { Response } from "express";
 import { sameDataHandler } from "../../middleware/checkSameData";
+import { UpdateDriverInput } from "../../../shared/schemas/users.schemas";
 
 const DRIVER_ALLOWED_TRANSITIONS: { [key: string]: string[] } = {
     "PENDING": [],
@@ -36,9 +37,9 @@ export const driverController = {
             if (!user) {
                 return res.status(404).json({ error: "User not found" });
             }
-            res.json(user);
+            return res.json(user);
         } catch (error) {
-            res.status(500).json({ error: "Failed to fetch user information" });
+            return res.status(500).json({ error: "Failed to fetch user information" });
         }
     },
 
@@ -47,7 +48,7 @@ export const driverController = {
             const userId = req.userId as string;
             const { name, phone, address, paymentMethod, currentPassword, newPassword, isActiveAsDriver } = req.body;
             // Prisma ignore les champs valant undefined : seuls les champs envoyés sont modifiés
-            const data: Prisma.UserUpdateInput = { name, phone, address, paymentMethod, isActiveAsDriver };
+            const data: UpdateDriverInput = { name, phone, address, paymentMethod, isActiveAsDriver };
             const user = await prisma.user.findUnique({ where: { id: userId } });
 
             if (!user) {
@@ -76,9 +77,9 @@ export const driverController = {
                 data,
                 select: publicUserSelect,
             });
-            res.json(updatedUser);
+            return res.json(updatedUser);
         } catch (error) {
-            res.status(500).json({ error: "Failed to update driver information" });
+            return res.status(500).json({ error: "Failed to update driver information" });
         }
     },
 
@@ -95,9 +96,9 @@ export const driverController = {
             if (orders.length === 0) {
                 return res.status(200).json({ message: "No available orders found" });
             }
-            res.json(orders);
+            return res.json(orders);
         } catch (error) {
-            res.status(500).json({ error: "Failed to fetch available orders" });
+            return res.status(500).json({ error: "Failed to fetch available orders" });
         }
     },
 
@@ -130,7 +131,7 @@ export const driverController = {
                 where: { id: orderId },
                 data: { driverId: req.userId, status: newStatus }
             })
-            res.json(updatedOrder);
+            return res.json(updatedOrder);
         } catch (error) {
             return res.status(500).json({ error: "Failed to update order status" });
         }

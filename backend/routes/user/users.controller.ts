@@ -4,6 +4,7 @@ import { AuthRequest } from "../../middleware/authMiddleware";
 import { Response, Request } from "express";
 import bcrypt from "bcrypt";
 import { sameDataHandler } from "../../middleware/checkSameData";
+import { UpdateClientInput } from "../../../shared/schemas/users.schemas";
 
 const publicUserSelect = {
     id: true,
@@ -24,9 +25,9 @@ export const userController = {
             if (!user) {
                 return res.status(404).json({ error: "User not found" });
             }
-            res.json(user);
+            return res.json(user);
         } catch (error) {
-            res.status(500).json({ error: "Failed to fetch user information" });
+            return res.status(500).json({ error: "Failed to fetch user information" });
         }
     },
 
@@ -41,12 +42,12 @@ export const userController = {
             });
 
             if (menuItems.length === 0) { // check the length of the menu-items found
-                res.status(404).json({ message: "no avalaible menu-items found" })
+                return res.status(404).json({ message: "no avalaible menu-items found" })
             }
 
-            res.json(menuItems);
+            return res.json(menuItems);
         } catch (error) {
-            res.status(500).json({ error: "Failed to fetch menu items" });
+            return res.status(500).json({ error: "Failed to fetch menu items" });
         }
     },
 
@@ -61,12 +62,12 @@ export const userController = {
             });
 
             if (restaurants.length === 0) { // check the length of the restaurants found
-                res.status(404).json({ message: "no Open restaurant found" }) 
+                return res.status(404).json({ message: "no Open restaurant found" }) 
             }
 
-            res.json(restaurants);
+            return res.json(restaurants);
         } catch (error) {
-            res.status(500).json({ error: "Failed to fetch restaurants" });
+            return res.status(500).json({ error: "Failed to fetch restaurants" });
         }
     },
 
@@ -75,7 +76,7 @@ export const userController = {
             const userId = req.userId as string;
             const { name, phone, address, paymentMethod, currentPassword, newPassword } = req.body;
             // Prisma ignore les champs valant undefined : seuls les champs envoyés sont modifiés
-            const data: Prisma.UserUpdateInput = { name, phone, address, paymentMethod };
+            const data: UpdateClientInput = { name, phone, address, paymentMethod };
             const user = await prisma.user.findUnique({ where: { id: userId } });
 
             if (!user) {
@@ -85,11 +86,11 @@ export const userController = {
             if (newPassword) {
                 const valid = await bcrypt.compare(currentPassword, user.password);
                 if (!valid) {
-                    return res.status(403).json({ error: "Current password is incorrect" });
+                    return res.status(400).json({ error: "Current password is incorrect" });
                 }
                 const same = await bcrypt.compare(newPassword, user.password);
                 if (same) {
-                    return res.status(403).json({ error: "New password must be different of current password" })
+                    return res.status(400).json({ error: "New password must be different of current password" })
                 }
                 data.password = await bcrypt.hash(newPassword, 10);
             }
@@ -104,9 +105,9 @@ export const userController = {
                 data,
                 select: publicUserSelect,
             });
-            res.json(updatedUser);
+            return res.json(updatedUser);
         } catch (error) {
-            res.status(500).json({ error: "Failed to update user information" });
+            return res.status(500).json({ error: "Failed to update user information" });
         }
     },
 }

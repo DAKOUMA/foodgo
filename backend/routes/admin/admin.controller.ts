@@ -8,9 +8,9 @@ export const adminController = {
                 select: { id: true, email: true, name: true, role: true, isActive: true, createdAt: true },
                 orderBy: { createdAt: "desc" }
             });
-            res.json(users)
+            return res.json(users)
         } catch (error) {
-            res.status(500).json({ error: "failed to fetch users" })
+            return res.status(500).json({ error: "failed to fetch users" })
         }
     },
 
@@ -20,9 +20,9 @@ export const adminController = {
                 include: { owner: { select: { email: true, name: true } }, menuItems: true },
                 orderBy: { createdAt: "desc" }
             })
-            res.json(restaurants)
+            return res.json(restaurants)
         } catch (error) {
-            res.status(500).json({ error: "Failed to fetch restaurants" });
+            return res.status(500).json({ error: "Failed to fetch restaurants" });
         }
     },
 
@@ -37,9 +37,9 @@ export const adminController = {
                 },
                 orderBy: { createdAt: "desc" }
             });
-            res.json(orders);
+            return res.json(orders);
         } catch (error) {
-            res.status(500).json({ error: "Failed to fetch orders" })
+            return res.status(500).json({ error: "Failed to fetch orders" })
         }
     },
 
@@ -51,7 +51,7 @@ export const adminController = {
             })
 
             if (!userActive) {
-                res.status(404).json({ error: "user not found" })
+                return res.status(404).json({ error: "user not found" })
             }
 
             const user = await prisma.user.update({
@@ -59,9 +59,9 @@ export const adminController = {
                 data: { isActive: !userActive?.isActive },
                 select: { id: true, email: true, isActive: true, name: true }
             });
-            res.json({ user: user, message: (userActive?.isActive ? `${user.name} is now deactive` : `${user.name} is now active`) });
+            return res.json({ user: user, message: (userActive?.isActive ? `${user.name} is now deactive` : `${user.name} is now active`) });
         } catch (error) {
-            res.status(500).json({ error: "Failed to deactivate user" })
+            return res.status(500).json({ error: "Failed to deactivate user" })
         }
     }
 }
