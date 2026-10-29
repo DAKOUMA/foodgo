@@ -10,6 +10,7 @@ export const adminController = {
             });
             return res.json(users)
         } catch (error) {
+            console.error(error)
             return res.status(500).json({ error: "failed to fetch users" })
         }
     },
@@ -22,6 +23,7 @@ export const adminController = {
             })
             return res.json(restaurants)
         } catch (error) {
+            console.error(error)
             return res.status(500).json({ error: "Failed to fetch restaurants" });
         }
     },
@@ -39,6 +41,7 @@ export const adminController = {
             });
             return res.json(orders);
         } catch (error) {
+            console.error(error)
             return res.status(500).json({ error: "Failed to fetch orders" })
         }
     },
@@ -61,6 +64,7 @@ export const adminController = {
             });
             return res.json({ user: user, message: (userActive?.isActive ? `${user.name} is now deactive` : `${user.name} is now active`) });
         } catch (error) {
+            console.error(error)
             return res.status(500).json({ error: "Failed to deactivate user" })
         }
     }

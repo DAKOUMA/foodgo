@@ -6,9 +6,11 @@ import authRoutes from "./routes/authRoutes";
 import adminRoutes from "./routes/admin/admin.routes";
 import usersRoutes from "./routes/user/users.routes";
 import driverRoutes from "./routes/driver/driver.routes";
+import { env } from "./config/env";
+import { errorHandler, notFound } from "./middleware/errorHandler";
 
 const app = express();
-app.use(cors());
+app.use(cors({ origin: env.CORS_ORIGIN }));
 app.use(express.json());
 
 app.get("/", (req, res) => {
@@ -21,7 +23,10 @@ app.use("/admin", adminRoutes);
 app.use("/users", usersRoutes);
 app.use("/driver", driverRoutes)
 
-const PORT = process.env.PORT || 3000;
+app.use(notFound);
+app.use(errorHandler);
+
+const PORT = env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server is running on  http://localhost:${PORT}`);
 });

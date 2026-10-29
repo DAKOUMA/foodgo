@@ -4,6 +4,7 @@ import { prisma } from "../lib/prisma";
 import jwt from "jsonwebtoken";
 import { validate } from "../middleware/validate";
 import { registerSchema, loginSchema } from "../../shared/schemas/auth.schemas";
+import { env } from "../config/env";
 
 const router = Router()
 
@@ -49,7 +50,7 @@ router.post("/login",validate(loginSchema), async (req, res) => {
 
         const token = jwt.sign(
             { userId: user.id, role: user.role },
-            process.env.JWT_SECRET as string,
+            env.JWT_SECRET,
             { expiresIn: "7d" }
         )
 

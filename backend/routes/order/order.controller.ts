@@ -81,6 +81,7 @@ export const orderController = {
             })
             return res.status(201).json(newOrder);
         } catch (error) {
+            console.error(error)
             return res.status(500).json({ error: "Failed to create order" });
         }
     },
@@ -128,6 +129,7 @@ export const orderController = {
 
             res.json(orders);
         } catch (error) {
+            console.error(error)
             return res.status(500).json({ error: "Failed to fetch orders" });
         }
     },
@@ -147,6 +149,7 @@ export const orderController = {
             }
             res.json(orders);
         } catch (error) {
+            console.error(error)
             return res.status(500).json({ error: "Failed to fetch available orders" });
         }
     },
@@ -198,6 +201,7 @@ export const orderController = {
             });
             res.json(updatedOrder);
         } catch (error) {
+            console.error(error)
             return res.status(500).json({ error: "Failed to update order status" });
         }
     },
@@ -231,6 +235,7 @@ export const orderController = {
             res.json(updatedOrder);
 
         } catch (error) {
+            console.error(error)
             return res.status(500).json({ error: "Failed to update order status" });
         }
     }

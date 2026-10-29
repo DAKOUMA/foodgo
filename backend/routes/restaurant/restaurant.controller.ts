@@ -4,6 +4,7 @@ import { Response } from "express";
 import { sameDataHandler } from "../../middleware/checkSameData";
 import { Prisma } from "../../generated/prisma/client";
 import jwt from "jsonwebtoken";
+import { env } from "../../config/env";
 
 export const restaurantController = {
 
@@ -37,12 +38,13 @@ export const restaurantController = {
 
             const token = jwt.sign(
                 { userId: owner.id, role: owner.role },
-                process.env.JWT_SECRET as string,
+                env.JWT_SECRET,
                 { expiresIn: "7d" }
             )
 
             return res.status(201).json({ restaurant, owner, token });
         } catch (error) {
+            console.error(error)
             return res.status(500).json({ error: "Failed to create restaurant" });
         }
     },
@@ -63,7 +65,7 @@ export const restaurantController = {
 
             const same = sameDataHandler(data, restaurant)
             if (same) {
-                return res.status(403).json({ error: same.error })
+                return res.status(400).json({ error: same.error })
             }
 
             const updatedRestaurant = await prisma.restaurant.update({
@@ -77,6 +79,7 @@ export const restaurantController = {
             });
             res.json(updatedRestaurant);
         } catch (error) {
+            console.error(error)
             return res.status(500).json({ error: "Failed to update restaurant" });
         }
     },
@@ -105,7 +108,7 @@ export const restaurantController = {
             const { restaurantId, name, description, price } = req.body;
 
             const restaurant = await prisma.restaurant.findUnique({ where: { id: restaurantId } });
-            const menuItemFind = await prisma.menuItem.findFirst({ where: { name: name } }) // find another menuItem with the same name
+            const menuItemFind = await prisma.menuItem.findFirst({ where: { name: name, restaurantId: restaurantId } }) // find another menuItem with the same name
             
             if (!restaurant) {
                 return res.status(404).json({ error: "Restaurant not found" })
@@ -124,6 +127,7 @@ export const restaurantController = {
             })
             return res.status(201).json(menuItem);
         } catch (error) {
+            console.error(error)
             return res.status(500).json({ error: "Failed to create menu item" });
         }
     },
@@ -148,7 +152,7 @@ export const restaurantController = {
             const same = sameDataHandler(data, menuItem)
 
             if (same) {
-                return res.status(403).json({ error: same.error })
+                return res.status(400).json({ error: same.error })
             }
 
             const updated = await prisma.menuItem.update({
@@ -157,6 +161,7 @@ export const restaurantController = {
             })
             return res.status(200).json(updated);
         } catch (error) {
+            console.error(error)
             return res.status(500).json({ error: "Failed to update menu item" });
         }
     },
@@ -179,6 +184,7 @@ export const restaurantController = {
             await prisma.menuItem.delete({ where: { id: menuItemId } })
             return res.status(204).send({ message: "Item deleted" });
         } catch (error) {
+            console.error(error)
             return res.status(500).json({ error: "Failed to delete menu item" });
         }
     }

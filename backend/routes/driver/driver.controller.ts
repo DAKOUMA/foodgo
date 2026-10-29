@@ -69,7 +69,7 @@ export const driverController = {
 
             const same = sameDataHandler(data, user)
             if (same) {
-                return res.status(403).json({ error: same.error })
+                return res.status(400).json({ error: same.error })
             }
 
             const updatedUser = await prisma.user.update({
@@ -79,6 +79,7 @@ export const driverController = {
             });
             return res.json(updatedUser);
         } catch (error) {
+            console.error(error)
             return res.status(500).json({ error: "Failed to update driver information" });
         }
     },
@@ -98,6 +99,7 @@ export const driverController = {
             }
             return res.json(orders);
         } catch (error) {
+            console.error(error)
             return res.status(500).json({ error: "Failed to fetch available orders" });
         }
     },
@@ -133,6 +135,7 @@ export const driverController = {
             })
             return res.json(updatedOrder);
         } catch (error) {
+            console.error(error)
             return res.status(500).json({ error: "Failed to update order status" });
         }
     },

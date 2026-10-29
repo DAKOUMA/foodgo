@@ -97,7 +97,7 @@ export const userController = {
 
             const same = sameDataHandler(data, user)
             if (same) {
-                return res.status(403).json({ error: same.error })
+                return res.status(400).json({ error: same.error })
             }
 
             const updatedUser = await prisma.user.update({
